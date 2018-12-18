@@ -54,7 +54,7 @@ while month<=duration
         undBal=0;
         fprintf('You will never repay your entire student loan. Your starting balance is £%.2f, your remaining balance will be £%.2f, total amount repaid will be £%.2f.\n',startTotBal,TotBal,sum(MONTHLYREPAYMENTS))
         never=1;
-    elseif month==34*12+7
+    elseif month==31*12+7
         postBal=0;
     end
     if salary-threshold>0
