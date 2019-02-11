@@ -23,7 +23,7 @@ outerLoopInd = 1;
 for salary = salaries % starting annual salary in £
     threshold = 25000; % repayment salary threshold in £, assumed to rise with inflation (optimistic)
     payRise = 0.02; % annual pay rise above inflation, assumed fixed for simplicity (can be negative)
-    fprintf('For a starting salary of £%.2f growing at %d%% per year:\n',salary,payRise)
+    fprintf('For a starting salary of £%.2f growing at %.2f%% per year:\n',salary,payRise)
 
     %% Account for interest accrued during study
     studied = 1;
