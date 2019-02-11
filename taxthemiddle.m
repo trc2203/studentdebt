@@ -134,11 +134,6 @@ for salary = salaries % starting annual salary in £
     [val,ind] = min(BALANCE);
     yearsTaken = fix(MONTHS(ind)/12);
     monthsExtra = rem(MONTHS(ind),12);
-    if startPostBal == 0
-        yearsTaken = yearsTaken-3; % so that time in education does not count towards time spent paying off loan
-    else
-        yearsTaken = yearsTaken-4;
-    end
     totalRepaid = sum(MONTHLYREPAYMENTS);
     if val<= 0 && never == 0
         fprintf('It will take %d years and %d months to pay off your entire student loan. Your starting balance is £%.2f and total amount repaid will be £%.2f.\n',yearsTaken,monthsExtra,starttotBal,totalRepaid)
