@@ -21,9 +21,10 @@ repaidTotals = [];
 amountLeft = [];
 outerLoopInd = 1;
 for salary = salaries % starting annual salary in £
-    threshold = 25000; % repayment salary threshold in £, assumed to rise with inflation (optimistic)
+    ugThreshold = 25000; % repayment salary threshold in £, assumed to rise with inflation (optimistic)
+    pgThreshold = 21000;
     payRise = 0.02; % annual pay rise above inflation, assumed fixed for simplicity (can be negative)
-    fprintf('For a starting salary of £%.2f growing at %g%% per year:\n',salary,payRise*100)
+    fprintf('\nFor a starting salary of £%.2f growing at %d%% per year:\n',salary,payRise)
 
     %% Account for interest accrued during study
     studied = 1;
@@ -36,8 +37,8 @@ for salary = salaries % starting annual salary in £
 
     %% Initialise variables
     postBal = startPostBal;
-    starttotBal = undBal+postBal;
-    totBal = starttotBal;
+    startTotBal = undBal+postBal;
+    totBal = startTotBal;
     month = 0;
     never = 0;
     already = 0;
@@ -55,26 +56,29 @@ for salary = salaries % starting annual salary in £
     NETREPAYMENTS = zeros(1,duration);
 
     %% Main loop
-    while month<= duration
-        if month == 30*12+7 && undBal ~= 0 % loan gets wiped 30 years after April following graduation
-            undBal = 0;
+    while month<=duration
+        if month==33*12+7 && undBal~=0 % loan gets wiped 30 years after April following graduation
+            undBal=0;
             finalTotBal=totBal;
-            fprintf('You will never repay your entire student loan. Your starting balance is £%.2f, your remaining balance will be £%.2f, total amount repaid will be £%.2f.\n',starttotBal,totBal,sum(MONTHLYREPAYMENTS))
-            never = 1;
-        elseif month == 31*12+7
-            postBal = 0;
+            fprintf('You will never repay your entire student loan. Your starting balance is £%.2f, your remaining balance will be £%.2f, total amount repaid will be £%.2f.\n',startTotBal,totBal,sum(MONTHLYREPAYMENTS))
+            never=1;
+        elseif month==34*12+7
+            postBal=0;
         end
-        if salary-threshold>0
-            extra = (salary-threshold)*0.0000015; % extra interest paid due to salary
+        if salary-ugThreshold>0
+            extra=(salary-ugThreshold)*0.0000015; % extra interest paid due to salary
             if extra>0.03 % extra interest capped at 3%
-                extra = 0.03;
+                extra=0.03;
             end
-            undRepay = (salary-threshold)*0.09; % amount paid back per year towards undergraduate debt
-            postRepay = (salary-threshold)*0.06; % amount paid back per year towards postgraduate debt
+            undRepay=(salary-ugThreshold)*0.09; % amount paid back per year towards undergraduate debt
+            postRepay=(salary-pgThreshold)*0.06; % amount paid back per year towards postgraduate debt
+        elseif salary-pgThreshold>0
+            undRepay=0;
+            postRepay=(salary-pgThreshold)*0.06;
         else
-            extra = 0;
-            undRepay = 0;
-            postRepay = 0;
+            extra=0;
+            undRepay=0;
+            postRepay=0;
         end
         if month<7
             undRepay = 0; % won't start paying back until April after graduation
@@ -99,34 +103,35 @@ for salary = salaries % starting annual salary in £
         else
             postRepay = 0;
         end
-        undIntPc = RPI+extra; % interest percentage
-        postIntPc = RPI+0.03; % extra interest flat 3% for postgraduate loan
-        if mod(month,12) == 0
-            salary = salary*(1+RPI+payRise); % assuming salary rises every year by inflation + x%
-            threshold = threshold*(1+RPI);
+        undIntPc=RPI+extra; % interest percentage
+        postIntPc=RPI+0.03; % extra interest flat 3% for postgraduate loan
+        if mod(month,12)==0
+            salary=salary*(1+RPI+payRise); % assuming salary rises every year by inflation + x%
+            ugThreshold=ugThreshold*(1+RPI); % assuming repayment thresholds rise every year with inflation
+            pgThreshold=pgThreshold*(1+RPI);
         end
-        undIntPnd = undIntPc*undBal; % how much undergraduate balance will rise by due to interest in £
-        postIntPnd = postIntPc*postBal; % how much postgraduate balance will rise by due to interest in £
-        undBal = undBal+undIntPnd/12; % accounting for interest after repayments i.e. best case scenario
-        postBal = postBal+postIntPnd/12;
-        totBal = undBal+postBal;
-        month = month+1;
-        MONTHS(month) = month;
-        UNDERGRADUATEBALANCE(month) = undBal;
-        POSTGRADUATEBALANCE(month) = postBal;
-        BALANCE(month) = totBal;
-        MONTHLYEARNINGS(month) = salary/12;
-        MONTHLYREPAYMENTS(month) = (undRepay+postRepay)/12;
-        NETREPAYMENTS(month) = (undRepay+postRepay-undIntPnd-postIntPnd)/12;
-        if already == 0 && NETREPAYMENTS(month)>0 && month>1
+        undIntPnd=undIntPc*undBal; % how much undergraduate balance will rise by due to interest in £
+        postIntPnd=postIntPc*postBal; % how much postgraduate balance will rise by due to interest in £
+        undBal=undBal+undIntPnd/12; % accounting for interest after repayments i.e. best case scenario
+        postBal=postBal+postIntPnd/12;
+        totBal=undBal+postBal;
+        month=month+1;
+        MONTHS(month)=month;
+        UNDERGRADUATEBALANCE(month)=undBal;
+        POSTGRADUATEBALANCE(month)=postBal;
+        BALANCE(month)=totBal;
+        MONTHLYEARNINGS(month)=salary/12;
+        MONTHLYREPAYMENTS(month)=(undRepay+postRepay)/12;
+        NETREPAYMENTS(month)=(undRepay+postRepay-undIntPnd-postIntPnd)/12;
+        if already==0 && NETREPAYMENTS(month)>0 && month>1
             fprintf('You will be repaying less than the interest your loan is accumulating for the first %d years and %d months.\n',fix(month/12),rem(month,12))
-            already = 1;
+            already=1;
         end
-        SALARY(month) = salary;
-        if month ~= 1
-            TOTALREPAID(month) = TOTALREPAID(month-1)+MONTHLYREPAYMENTS(month);
+        SALARY(month)=salary;
+        if month~=1
+            TOTALREPAID(month)=TOTALREPAID(month-1)+MONTHLYREPAYMENTS(month);
         else
-            TOTALREPAID(month) = MONTHLYREPAYMENTS(month);
+            TOTALREPAID(month)=MONTHLYREPAYMENTS(month);
         end
     end
 
@@ -136,7 +141,7 @@ for salary = salaries % starting annual salary in £
     monthsExtra = rem(MONTHS(ind),12);
     totalRepaid = sum(MONTHLYREPAYMENTS);
     if val<= 0 && never == 0
-        fprintf('It will take %d years and %d months to pay off your entire student loan. Your starting balance is £%.2f and total amount repaid will be £%.2f.\n',yearsTaken,monthsExtra,starttotBal,totalRepaid)
+        fprintf('It will take %d years and %d months to pay off your entire student loan. Your starting balance is £%.2f and total amount repaid will be £%.2f.\n',yearsTaken,monthsExtra,startTotBal,totalRepaid)
         finalTotBal = 0;
     end
     repaidTotals(outerLoopInd) = totalRepaid;
