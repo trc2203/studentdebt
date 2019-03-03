@@ -18,7 +18,7 @@ RPI=0.016; % old rate of inflation (rose from 1.6-3.1% in the last year, may ris
 salary=28000; % starting annual salary in £
 ugThreshold=25000; % repayment salary threshold in £, assumed to rise with inflation (optimistic)
 pgThreshold=21000; % postgrad threshold still £21000 :(
-payRise=0.01; % annual pay rise above inflation, assumed fixed for simplicity (can be negative)
+payRise=0.02; % annual pay rise above inflation, assumed fixed for simplicity (can be negative)
 
 %% Account for interest accrued during study
 studied=1;
@@ -48,6 +48,8 @@ MONTHLYREPAYMENTS=zeros(1,duration);
 SALARY=zeros(1,duration);
 TOTALREPAID=zeros(1,duration);
 NETREPAYMENTS=zeros(1,duration);
+UNDREPAYMENTS=zeros(1,duration);
+UNDINTERESTPND=zeros(1,duration);
 
 %% Main loop
 while month<=duration
@@ -116,6 +118,8 @@ while month<=duration
     MONTHLYEARNINGS(month)=salary/12;
     MONTHLYREPAYMENTS(month)=(undRepay+postRepay)/12;
     NETREPAYMENTS(month)=(undRepay+postRepay-undIntPnd-postIntPnd)/12;
+    UNDREPAYMENTS(month)=undRepay/12;
+    UNDINTERESTPND(month)=undIntPnd/12;
     if already==0 && NETREPAYMENTS(month)>0 && month>1
         fprintf('You will be repaying less than the interest your loans are accumulating for the first %d years and %d months.\n',fix(month/12),rem(month,12))
         already=1;
@@ -168,6 +172,16 @@ plot(MONTHS/12,NETREPAYMENTS)
 xlabel('Time after beginning of course (years)')
 ylabel('Net repayments (£)')
 title('Net monthly repayments')
+xlim([0,35])
+figure(6)
+hold on
+plot(MONTHS/12,UNDREPAYMENTS)
+xlabel('Time after beginning of course (years)')
+ylabel('Undergraduate loan repayment per month (£)')
+plot(MONTHS/12,UNDINTERESTPND)
+ylabel('Interest/repayment (£)')
+title('Interest accumulating vs. amount repaid each month')
+legend('Repayment (£)','Interest added (£)')
 xlim([0,35])
 [val,ind]=min(BALANCE);
 yearsTaken=fix(MONTHS(ind)/12);
